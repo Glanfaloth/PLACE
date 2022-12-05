@@ -10,8 +10,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # use for test/optimize
 def read_mesh_sdf(dataset_path, dataset, scene_name):
     if dataset == 'prox':
-        scene_mesh_path = os.path.join(dataset_path, 'scenes_downsampled')
+        scene_mesh_path = os.path.join(dataset_path, 'scenes')
         scene = o3d.io.read_triangle_mesh(os.path.join(scene_mesh_path, scene_name + '.ply'))
+
         cur_scene_verts = np.asarray(scene.vertices)
 
         ## read scene sdf
