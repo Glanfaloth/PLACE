@@ -34,17 +34,56 @@ mesh_box_1.translate((scene_center[0] - box_center_1[0], box_center_1[1] + scene
 mesh_box_2.translate((scene_center[0] - box_center_1[0], box_center_1[1] + scene_max_y, -1))
 mesh_box_3.translate((-box_center_2[0] + scene_max_x, scene_center[1] - box_center_2[1], -1))
 mesh_box_4.translate((-box_center_2[0] + scene_min_x, scene_center[1] - box_center_2[1], -1))
+mesh_boxes = [mesh_box_1, mesh_box_2, mesh_box_3, mesh_box_4]
+R = scene_mesh.get_rotation_matrix_from_xyz((0, 0, rot_angle_1))
 
-R = scene_mesh.get_rotation_matrix_from_xyz((0, 0, -rot_angle_1))
-mesh_box_1.rotate(R, center=(0,0,0))
-mesh_box_2.rotate(R, center=(0,0,0))
-mesh_box_3.rotate(R, center=(0,0,0))
-mesh_box_4.rotate(R, center=(0,0,0))
+T = np.zeros((4, 4))
+T[0, 0] = -1
+T[1, 2] = 1
+T[2, 1] = 1
+T[3, 3] = 1
+print(T)
+
 humans = []
-for i in range(8):
-    body = o3d.io.read_triangle_mesh('human_meshes/' + str(i) + '.ply')
+humans_t = []
+
+for i in range(10):
+    body = o3d.io.read_triangle_mesh('human_meshes/' + str(i) + '.obj')
     body.compute_vertex_normals()
+    body.rotate(R, center=(0,0,0))
     humans.append(body)
+    body_t = copy.deepcopy(body).transform(T)
+    humans_t.append(body_t)
+    # move body to scene center
+    human_center = body_t.get_center()
+    body_centered = copy.deepcopy(body_t).translate(-human_center)
+    # o3d.io.write_triangle_mesh("human_meshes/human_" + str(i) + "_centered.obj", body_centered, write_triangle_uvs=True)
+    print("human_mesh: " + str(body_centered.get_center()))
+
+mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(
+    size=0.6, origin=[0,0,0])
+
+scene_mesh.rotate(R, center=(0,0,0))
+
+
+scene_mesh_t = copy.deepcopy(scene_mesh).transform(T)
+mesh_frame_t = copy.deepcopy(mesh_frame).transform(T)
+mesh_box_1_t = copy.deepcopy(mesh_box_1).transform(T)
+mesh_box_2_t = copy.deepcopy(mesh_box_1).transform(T)
+mesh_box_3_t = copy.deepcopy(mesh_box_1).transform(T)
+mesh_box_4_t = copy.deepcopy(mesh_box_1).transform(T)
+mesh_boxes_t = [mesh_box_1_t, mesh_box_2_t, mesh_box_3_t, mesh_box_4_t]
+scene_center_t = scene_mesh_t.get_center()
+
 
 # use normal open3d visualization
-o3d.visualization.draw_geometries([mesh_box_1, mesh_box_2, mesh_box_3, mesh_box_4, scene_mesh] + humans)
+
+
+print("scene_mesh: " + str(scene_mesh_t.get_center()))
+scene_mesh_centered = copy.deepcopy(scene_mesh_t).translate(-scene_center_t)
+print("scene_mesh_centered: " + str(scene_mesh_centered.get_center()))
+# o3d.io.write_triangle_mesh("human_meshes/scene_mesh_centered.obj", scene_mesh_centered, write_triangle_uvs=True)
+
+all_meshes = [scene_mesh_t] + humans_t
+
+o3d.visualization.draw_geometries(all_meshes)
