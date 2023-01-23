@@ -58,7 +58,7 @@ for i in range(10):
     human_center = body_t.get_center()
     body_centered = copy.deepcopy(body_t).translate(-human_center)
     # o3d.io.write_triangle_mesh("human_meshes/human_" + str(i) + "_centered.obj", body_centered, write_triangle_uvs=True)
-    print("human_mesh: " + str(body_centered.get_center()))
+    
 
 mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(
     size=0.6, origin=[0,0,0])
@@ -84,6 +84,19 @@ scene_mesh_centered = copy.deepcopy(scene_mesh_t).translate(-scene_center_t)
 print("scene_mesh_centered: " + str(scene_mesh_centered.get_center()))
 # o3d.io.write_triangle_mesh("human_meshes/scene_mesh_centered.obj", scene_mesh_centered, write_triangle_uvs=True)
 
-all_meshes = [scene_mesh_t] + humans_t
+scene_meshes = []
+for idx in range(20):
+    instance_obj = o3d.io.read_triangle_mesh("scene_meshes/N3OpenArea_" + str(idx) + ".obj")
+    instance_obj.rotate(R, center=(0,0,0))
+    instance_t = copy.deepcopy(instance_obj).transform(T)
+    instance_center_t = instance_t.get_center()
+    print("instance" + str(idx) +": " + str(instance_center_t))
+    instance_centered = copy.deepcopy(instance_t).translate(-instance_center_t)
+    o3d.io.write_triangle_mesh("scene_meshes/scene_" + str(idx) + ".obj", instance_centered, write_triangle_uvs=True)
+    scene_meshes.append(instance_t)
+
+# o3d.visualization.draw_geometries(scene_meshes)
+
+all_meshes = humans_t + scene_meshes + [scene_mesh_t]
 
 o3d.visualization.draw_geometries(all_meshes)
