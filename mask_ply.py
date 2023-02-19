@@ -44,7 +44,8 @@ def processMask(i):
 for i in range(num_files):
     processMask(i)
 
-# for j in range(num_files):
-#     pcd = o3d.io.read_point_cloud("scene_meshes/"+args.n+"_" + str(j) + ".ply")
-#     mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, 0.1)
-#     o3d.io.write_triangle_mesh("scene_meshes/"+args.n+"_"+str(j)+".obj", mesh, write_triangle_uvs=True)
+vis = []
+for j in range(num_files):
+    pcd = o3d.io.read_point_cloud("scene_meshes/"+args.n+"_" + str(j) + ".ply")
+    vis.append(pcd)
+o3d.visualization.draw_geometries(vis)
