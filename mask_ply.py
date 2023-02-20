@@ -59,9 +59,10 @@ for j in range(num_files):
     # Create mesh from point cloud
     mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
         pcd_mesh,
-        depth=10,
-        scale=1.1,
-        linear_fit=False)[0]
+        depth=10)[0]
+
+    mesh.remove_duplicated_vertices()
+    mesh.remove_unreferenced_vertices()
 
     o3d.io.write_triangle_mesh(directory + "/"+args.scene+"_"+str(j)+".obj", mesh)
     mesh_vis = o3d.io.read_triangle_mesh(directory + "/"+args.scene+"_"+str(j)+".obj")
