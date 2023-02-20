@@ -5,12 +5,16 @@ import os
 import re
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--n', type=str, default="N3OpenArea")
+parser.add_argument('--scene', type=str, default="N3OpenArea")
 args = parser.parse_args()
 
-directory_pattern =  r'.*{}$'.format(args.n)
+directory_pattern =  r'.*{}$'.format(args.scene)
+directory = "scene_meshes/{}".format(args.scene)
 
-pcd = o3d.io.read_point_cloud('/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe/scenes/'+args.n+'.ply')
+if not os.path.exists(directory):
+    os.mkdir(directory)
+
+pcd = o3d.io.read_point_cloud('/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe/scenes/'+args.scene+'.ply')
 pcd_in_np = np.asarray(pcd.points)
 
 num_files = 0
@@ -39,13 +43,15 @@ def processMask(i):
     pcd_in_np_masked = [pcd_in_np[i] for i, v in enumerate(mask) if v == 1]
     pcd_masked = o3d.geometry.PointCloud()
     pcd_masked.points = o3d.utility.Vector3dVector(pcd_in_np_masked)
-    o3d.io.write_point_cloud("scene_meshes/"+args.n+"_" + str(i) + ".ply", pcd_masked, write_ascii=True)
+    o3d.io.write_point_cloud(directory + "/"+args.scene+"_" + str(i) + ".ply", pcd_masked, write_ascii=True)
+    # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd_masked, 0.1)
+    # o3d.io.write_triangle_mesh(directory + "/"+args.scene+"_"+str(j)+".obj", mesh, write_triangle_uvs=True)
     
 for i in range(num_files):
     processMask(i)
 
 vis = []
 for j in range(num_files):
-    pcd = o3d.io.read_point_cloud("scene_meshes/"+args.n+"_" + str(j) + ".ply")
+    pcd = o3d.io.read_point_cloud(directory + "/" +args.scene+"_" + str(j) + ".ply")
     vis.append(pcd)
 o3d.visualization.draw_geometries(vis)
