@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 checkpoints/
+scene_meshes/
+human_meshes/
