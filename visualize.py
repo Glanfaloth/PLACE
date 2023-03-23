@@ -69,7 +69,8 @@ T[2, 1] = 1
 T[3, 3] = 1
 
 dynamic_objects = {}
-num_humans = 5
+static_objects = []
+num_humans = 10
 
 humans = []
 humans_t = []
@@ -96,13 +97,12 @@ for i in range(num_humans):
     dynamic_objects[object_name]["csvtraj"] = "traj_human_{}".format(i)
     dynamic_objects[object_name]["loop"] = False
     dynamic_objects[object_name]["position"] = [float(-human_center_t[0]),float(human_center_t[2]),float(human_center_t[1])]
-    # dynamic_objects[object_name]["prefab"] = args.scene + '_human_'+ str(i) + "_centered"
-    dynamic_objects[object_name]["prefab"] = "rpg_box01"
+    dynamic_objects[object_name]["prefab"] = args.scene + '_human_'+ str(i) + "_centered"
     dynamic_objects[object_name]["rotation"] = [0,0,0,0]
-    dynamic_objects[object_name]["scale"] = [0.01,0.01,0.01]
+    dynamic_objects[object_name]["scale"] = [1,1,1]
     dynamic_objects[object_name]["boundingbox"] = [-minCoors[0],minCoors[2],minCoors[1],-maxCoors[0],maxCoors[2],maxCoors[1]]
 
-    with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/csvtrajs/' + "traj_human_{}.csv".format(i), 'w', newline='') as csvfile:
+    with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/csvtrajs/' + "traj_human_{}.csv".format(i), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["# header"])
         writer.writerow(['0.000000000000000000e+00', str(float(-human_center_t[0])), str(float(human_center_t[2])), str(float(human_center_t[1])), '0', '0', '0', '0'])
@@ -125,8 +125,7 @@ scene_center_t = scene_mesh_t.get_center()
 # use normal open3d visualization
 
 scene_mesh_centered = copy.deepcopy(scene_mesh_t).translate(-scene_center_t)
-o3d.io.write_triangle_mesh(human_directory+"/"+ args.scene +"_scene_mesh_centered.obj", scene_mesh_centered, write_triangle_uvs=True)
-
+o3d.io.write_triangle_mesh(human_directory+"/"+ args.scene +"_scene_mesh_centered.obj", scene_mesh_centered)
 scene_meshes = [scene_mesh_t]
 for idx in range(num_instances):
     instance_obj = o3d.io.read_triangle_mesh(scene_directory + '/' + args.scene +'_' + str(idx) + ".obj")
@@ -142,21 +141,12 @@ for idx in range(num_instances):
     minCoors = [float(co) for co in b.get_print_info().split(") - (")[0][2:].split(", ")]
     maxCoors = [float(co) for co in b.get_print_info().split(") - (")[1][:-2].split(", ")]
     
-    object_name = "Object{}".format(idx+num_humans+1)
-    dynamic_objects[object_name] = {}
-    dynamic_objects[object_name]["csvtraj"] = "traj_scene_{}".format(idx)
-    dynamic_objects[object_name]["loop"] = False
-    dynamic_objects[object_name]["position"] = [float(-instance_center_t[0]),float(instance_center_t[2]),float(instance_center_t[1])]
-    # dynamic_objects[object_name]["prefab"] = args.scene + '_scene_'+ str(idx) + "_centered"
-    dynamic_objects[object_name]["prefab"] = "rpg_box01"
-    dynamic_objects[object_name]["rotation"] = [0,0,0,0]
-    dynamic_objects[object_name]["scale"] = [0.01,0.01,0.01]
-    dynamic_objects[object_name]["boundingbox"] = [-minCoors[0],minCoors[2],minCoors[1],-maxCoors[0],maxCoors[2],maxCoors[1]]
-
-    with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/csvtrajs/' + "traj_scene_{}.csv".format(idx), 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(["# header"])
-        writer.writerow(['0.000000000000000000e+00', str(float(-instance_center_t[0])), str(float(instance_center_t[2])), str(float(instance_center_t[1])), '0', '0', '0', '0'])
+    tmp = [args.scene + '_scene_'+ str(idx) + "_centered"]
+    tmp.extend([float(-instance_center_t[0]),float(instance_center_t[2]),float(instance_center_t[1])])
+    tmp.extend([0,0,0,0])
+    tmp.extend([1.0,1.0,1.0])
+    tmp.extend([-minCoors[0],minCoors[2],minCoors[1],-maxCoors[0],maxCoors[2],maxCoors[1]])
+    static_objects.append(", ".join([str(x) for x in tmp]))
 
 all_meshes = humans_t + scene_meshes + bb
 
@@ -176,7 +166,7 @@ for bb_len in range(len(bb)):
     world_max_y = max(world_max_y, maxCoors[2])
     world_max_z = max(world_max_z, maxCoors[1])
 
-object_name = "Object{}".format(num_humans+num_instances+1)
+object_name = "Object{}".format(num_humans+1)
 dynamic_objects[object_name] = {}
 dynamic_objects[object_name]["csvtraj"] = "traj_scene"
 dynamic_objects[object_name]["loop"] = False
@@ -186,12 +176,16 @@ dynamic_objects[object_name]["rotation"] = [0,0,0,0]
 dynamic_objects[object_name]["scale"] = [1,1,1]
 dynamic_objects[object_name]["boundingbox"] = [world_min_x, world_min_y, world_min_z, world_max_x, world_max_y, world_max_z]
 
-with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/csvtrajs/' + "traj_scene.csv", 'w', newline='') as csvfile:
+with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/csvtrajs/' + "traj_scene.csv", 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["# header"])
-    writer.writerow(['0.000000000000000000e+00', str(float(-human_center_t[0])), str(float(human_center_t[2])), str(float(human_center_t[1])), '0', '0', '0', '0'])
+    writer.writerow(['0.000000000000000000e+00', str(float(-scene_center_t[0])), str(float(scene_center_t[2])), str(float(scene_center_t[1])), '0', '0', '0', '0'])
 
-result = {"N": num_humans + num_instances + 1, **dynamic_objects}
-with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/dynamic_obstacles.yaml", 'w') as f:
+
+with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/static_obstacles.csv", "w") as f:
+    f.write("\n".join(static_objects))
+
+result = {"N": num_humans + 1, **dynamic_objects}
+with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/dynamic_obstacles.yaml", 'w') as f:
     yaml.dump(result, f, default_flow_style=False)
 o3d.visualization.draw_geometries(all_meshes)
