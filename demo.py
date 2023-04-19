@@ -1,6 +1,6 @@
 import warnings
 warnings.simplefilter("ignore", UserWarning)
-
+import os
 # from open3d import JVisualizer
 from open3d.j_visualizer import JVisualizer
 import torch
@@ -20,10 +20,16 @@ from utils_read_data import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--n', type=int, default=0, help='nth human')
+parser.add_argument('--scene', type=str, default='N3OpenArea', help='scene name')
 args = parser.parse_args()
 
 prox_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe'
-scene_name = 'N3OpenArea'
+scene_name = args.scene
+directory_path = "human_meshes/{}".format(scene_name)
+
+if not os.path.exists(directory_path):
+    os.mkdir(directory_path)
+
 # smplx/vpose model path
 smplx_model_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe/body_models/smplx_model'
 vposer_model_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe/body_models/vposer_v1_0'
@@ -336,9 +342,9 @@ mesh_box_3.rotate(R, center=(0,0,0))
 mesh_box_4.rotate(R, center=(0,0,0))
 
 # use normal open3d visualization
-o3d.visualization.draw_geometries([mesh_box_1, mesh_box_2, mesh_box_3, mesh_box_4, scene_mesh, body_mesh_opt_s2])
+o3d.visualization.draw_geometries([scene_mesh, body_mesh_opt_s2])
 
-o3d.io.write_triangle_mesh("human_meshes/"+str(args.n)+".ply", body_mesh_opt_s2)
+o3d.io.write_triangle_mesh(directory_path+"/" + str(args.n)+".obj", body_mesh_opt_s2, write_triangle_uvs=True)
 
 #  # use webGL
 # visualizer = JVisualizer() 

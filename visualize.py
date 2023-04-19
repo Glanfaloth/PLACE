@@ -70,7 +70,7 @@ T[3, 3] = 1
 
 dynamic_objects = {}
 static_objects = []
-num_humans = 10
+num_humans = 8
 
 humans = []
 humans_t = []
@@ -100,7 +100,7 @@ for i in range(num_humans):
     dynamic_objects[object_name]["prefab"] = args.scene + '_human_'+ str(i) + "_centered"
     dynamic_objects[object_name]["rotation"] = [0,0,0,0]
     dynamic_objects[object_name]["scale"] = [1,1,1]
-    dynamic_objects[object_name]["boundingbox"] = [-minCoors[0],minCoors[2],minCoors[1],-maxCoors[0],maxCoors[2],maxCoors[1]]
+    dynamic_objects[object_name]["boundingbox"] = [-maxCoors[0],minCoors[2],minCoors[1],-minCoors[0],maxCoors[2],maxCoors[1]]
 
     with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/csvtrajs/' + "traj_human_{}.csv".format(i), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -145,7 +145,7 @@ for idx in range(num_instances):
     tmp.extend([float(-instance_center_t[0]),float(instance_center_t[2]),float(instance_center_t[1])])
     tmp.extend([0,0,0,0])
     tmp.extend([1.0,1.0,1.0])
-    tmp.extend([-minCoors[0],minCoors[2],minCoors[1],-maxCoors[0],maxCoors[2],maxCoors[1]])
+    tmp.extend([-maxCoors[0],minCoors[2],minCoors[1],-minCoors[0],maxCoors[2],maxCoors[1]])
     static_objects.append(", ".join([str(x) for x in tmp]))
 
 all_meshes = humans_t + scene_meshes + bb
@@ -159,10 +159,10 @@ world_max_z = -100
 for bb_len in range(len(bb)):
     minCoors = [float(co) for co in bb[bb_len].get_print_info().split(") - (")[0][2:].split(", ")]
     maxCoors = [float(co) for co in bb[bb_len].get_print_info().split(") - (")[1][:-2].split(", ")]
-    world_min_x = min(world_min_x, -minCoors[0])
+    world_min_x = min(world_min_x, -maxCoors[0])
     world_min_y = min(world_min_y, minCoors[2])
     world_min_z = min(world_min_z, minCoors[1])
-    world_max_x = max(world_max_x, -maxCoors[0])
+    world_max_x = max(world_max_x, -minCoors[0])
     world_max_y = max(world_max_y, maxCoors[2])
     world_max_z = max(world_max_z, maxCoors[1])
 
