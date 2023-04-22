@@ -13,6 +13,7 @@ from utils import *
 from utils_read_data import *
 
 prox_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe'
+replica_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/replica_v1'
 parser = argparse.ArgumentParser()
 parser.add_argument('--scene', type=str, default="N3OpenArea")
 args = parser.parse_args()
@@ -29,7 +30,7 @@ if not os.path.exists(human_directory):
 
 num_instances = 0
 
-for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
+for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/thesis_ws/mask3d_results'):
     for dirname in dirnames:
         if re.match(directory_pattern, dirname):
             directory_path = os.path.join(dirpath, dirname, "pred_mask")
@@ -37,10 +38,14 @@ for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
                 num_instances += 1
 
 # read scen mesh/sdf
-scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(prox_dataset_path,
-                                                                                             'prox',
+# scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(prox_dataset_path,
+#                                                                                              'prox',
+#                                                                                              scene_name)
+# rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('prox', scene_name)
+scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(replica_dataset_path,
+                                                                                             'replica',
                                                                                              scene_name)
-rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('prox', scene_name)
+rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('replica', scene_name)
 
 # draw box
 mesh_box_1 = o3d.geometry.TriangleMesh.create_box(width=abs(scene_min_x)+abs(scene_max_x), height=0.1, depth=2.5)
@@ -70,7 +75,7 @@ T[3, 3] = 1
 
 dynamic_objects = {}
 static_objects = []
-num_humans = 8
+num_humans = 10
 
 humans = []
 humans_t = []
@@ -102,7 +107,7 @@ for i in range(num_humans):
     dynamic_objects[object_name]["scale"] = [1,1,1]
     dynamic_objects[object_name]["boundingbox"] = [-maxCoors[0],minCoors[2],minCoors[1],-minCoors[0],maxCoors[2],maxCoors[1]]
 
-    with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/csvtrajs/' + "traj_human_{}.csv".format(i), 'w', newline='') as csvfile:
+    with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/csvtrajs/' + "traj_human_{}.csv".format(i), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["# header"])
         writer.writerow(['0.000000000000000000e+00', str(float(-human_center_t[0])), str(float(human_center_t[2])), str(float(human_center_t[1])), '0', '0', '0', '0'])
@@ -127,26 +132,26 @@ scene_center_t = scene_mesh_t.get_center()
 scene_mesh_centered = copy.deepcopy(scene_mesh_t).translate(-scene_center_t)
 o3d.io.write_triangle_mesh(human_directory+"/"+ args.scene +"_scene_mesh_centered.obj", scene_mesh_centered)
 scene_meshes = [scene_mesh_t]
-for idx in range(num_instances):
-    instance_obj = o3d.io.read_triangle_mesh(scene_directory + '/' + args.scene +'_' + str(idx) + ".obj")
-    instance_obj.rotate(R, center=(0,0,0))
-    instance_t = copy.deepcopy(instance_obj).transform(T)
-    instance_center_t = instance_t.get_center()
-    instance_centered = copy.deepcopy(instance_t).translate(-instance_center_t)
-    o3d.io.write_triangle_mesh(scene_directory + '/' + args.scene +'_scene_'  + str(idx) + "_centered.obj", instance_centered, write_triangle_uvs=True)
-    scene_meshes.append(instance_t)
-    b = instance_t.get_axis_aligned_bounding_box()
-    bb.append(b)
+# for idx in range(num_instances):
+#     instance_obj = o3d.io.read_triangle_mesh(scene_directory + '/' + args.scene +'_' + str(idx) + ".obj")
+#     instance_obj.rotate(R, center=(0,0,0))
+#     instance_t = copy.deepcopy(instance_obj).transform(T)
+#     instance_center_t = instance_t.get_center()
+#     instance_centered = copy.deepcopy(instance_t).translate(-instance_center_t)
+#     o3d.io.write_triangle_mesh(scene_directory + '/' + args.scene +'_scene_'  + str(idx) + "_centered.obj", instance_centered, write_triangle_uvs=True)
+#     scene_meshes.append(instance_t)
+#     b = instance_t.get_axis_aligned_bounding_box()
+#     bb.append(b)
 
-    minCoors = [float(co) for co in b.get_print_info().split(") - (")[0][2:].split(", ")]
-    maxCoors = [float(co) for co in b.get_print_info().split(") - (")[1][:-2].split(", ")]
+#     minCoors = [float(co) for co in b.get_print_info().split(") - (")[0][2:].split(", ")]
+#     maxCoors = [float(co) for co in b.get_print_info().split(") - (")[1][:-2].split(", ")]
     
-    tmp = [args.scene + '_scene_'+ str(idx) + "_centered"]
-    tmp.extend([float(-instance_center_t[0]),float(instance_center_t[2]),float(instance_center_t[1])])
-    tmp.extend([0,0,0,0])
-    tmp.extend([1.0,1.0,1.0])
-    tmp.extend([-maxCoors[0],minCoors[2],minCoors[1],-minCoors[0],maxCoors[2],maxCoors[1]])
-    static_objects.append(", ".join([str(x) for x in tmp]))
+#     tmp = [args.scene + '_scene_'+ str(idx) + "_centered"]
+#     tmp.extend([float(-instance_center_t[0]),float(instance_center_t[2]),float(instance_center_t[1])])
+#     tmp.extend([0,0,0,0])
+#     tmp.extend([1.0,1.0,1.0])
+#     tmp.extend([-maxCoors[0],minCoors[2],minCoors[1],-minCoors[0],maxCoors[2],maxCoors[1]])
+#     static_objects.append(", ".join([str(x) for x in tmp]))
 
 all_meshes = humans_t + scene_meshes + bb
 
@@ -166,26 +171,17 @@ for bb_len in range(len(bb)):
     world_max_y = max(world_max_y, maxCoors[2])
     world_max_z = max(world_max_z, maxCoors[1])
 
-object_name = "Object{}".format(num_humans+1)
-dynamic_objects[object_name] = {}
-dynamic_objects[object_name]["csvtraj"] = "traj_scene"
-dynamic_objects[object_name]["loop"] = False
-dynamic_objects[object_name]["position"] = [float(-scene_center_t[0]),float(scene_center_t[2]),float(scene_center_t[1])]
-dynamic_objects[object_name]["prefab"] = args.scene + '_scene_mesh_centered'
-dynamic_objects[object_name]["rotation"] = [0,0,0,0]
-dynamic_objects[object_name]["scale"] = [1,1,1]
-dynamic_objects[object_name]["boundingbox"] = [world_min_x, world_min_y, world_min_z, world_max_x, world_max_y, world_max_z]
+tmp = [args.scene + '_scene_mesh_centered']
+tmp.extend([float(-scene_center_t[0]),float(scene_center_t[2]),float(scene_center_t[1])])
+tmp.extend([0,0,0,0])
+tmp.extend([1.0,1.0,1.0])
+tmp.extend([world_min_x, world_min_y, world_min_z, world_max_x, world_max_y, world_max_z])
+static_objects.append(", ".join([str(x) for x in tmp]))
 
-with open('/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/csvtrajs/' + "traj_scene.csv", 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(["# header"])
-    writer.writerow(['0.000000000000000000e+00', str(float(-scene_center_t[0])), str(float(scene_center_t[2])), str(float(scene_center_t[1])), '0', '0', '0', '0'])
-
-
-with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/static_obstacles.csv", "w") as f:
+with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/static_obstacles.csv", "w") as f:
     f.write("\n".join(static_objects))
 
-result = {"N": num_humans + 1, **dynamic_objects}
-with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_0/dynamic_obstacles.yaml", 'w') as f:
+result = {"N": num_humans, **dynamic_objects}
+with open("/local/home/yeltao/thesis_ws/agile_flight/flightmare/flightpy/configs/vision/custom/environment_1/dynamic_obstacles.yaml", 'w') as f:
     yaml.dump(result, f, default_flow_style=False)
 o3d.visualization.draw_geometries(all_meshes)

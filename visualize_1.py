@@ -11,6 +11,7 @@ from utils import *
 from utils_read_data import *
 
 prox_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe'
+replica_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/replica_v1'
 parser = argparse.ArgumentParser()
 parser.add_argument('--scene', type=str, default="N3OpenArea")
 args = parser.parse_args()
@@ -27,7 +28,7 @@ if not os.path.exists(human_directory):
 
 num_instances = 0
 
-for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
+for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/thesis_ws/mask3d_results'):
     for dirname in dirnames:
         if re.match(directory_pattern, dirname):
             directory_path = os.path.join(dirpath, dirname, "pred_mask")
@@ -35,10 +36,14 @@ for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
                 num_instances += 1
 
 # read scen mesh/sdf
-scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(prox_dataset_path,
-                                                                                             'prox',
+# scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(prox_dataset_path,
+#                                                                                              'prox',
+#                                                                                              scene_name)
+# rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('prox', scene_name)
+scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(replica_dataset_path,
+                                                                                             'replica',
                                                                                              scene_name)
-rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('prox', scene_name)
+rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('replica', scene_name)
 
 scene_center = scene_mesh.get_center()
 R = scene_mesh.get_rotation_matrix_from_xyz((0, 0, rot_angle_1))
@@ -49,7 +54,7 @@ T[1, 2] = 1
 T[2, 1] = 1
 T[3, 3] = 1
 
-num_humans = 8
+num_humans = 10
 
 humans = []
 humans_t = []
@@ -80,8 +85,10 @@ mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(
 scene_mesh.rotate(R, center=(0,0,0))
 
 # use normal open3d visualization
-
+skip = [3,18,20,21,22,24,25,27,29,34,35,36,41]
 for idx in range(num_instances):
+    if idx in skip:
+        continue
     instance_obj = o3d.io.read_triangle_mesh(scene_directory + '/' + args.scene +'_' + str(idx) + ".obj")
     instance_obj.rotate(R, center=(0,0,0))
     instance_t = copy.deepcopy(instance_obj).transform(T)
@@ -92,23 +99,3 @@ for idx in range(num_instances):
     maxCoors = [float(co) for co in b.get_print_info().split(") - (")[1][:-2].split(", ")]
     with open('/local/home/yeltao/thesis_ws/sb_min_time_quadrotor_planning/python/obstacles.txt', 'a', newline='') as file:
         file.write(" ".join(str(x) for x in [-maxCoors[0],minCoors[2],minCoors[1],-minCoors[0],maxCoors[2],maxCoors[1]])+ '\n')
-
-world_min_x = 100
-world_min_y = 100
-world_min_z = 100
-world_max_x = -100
-world_max_y = -100
-world_max_z = -100
-for bb_len in range(len(bb)):
-    minCoors = [float(co) for co in bb[bb_len].get_print_info().split(") - (")[0][2:].split(", ")]
-    maxCoors = [float(co) for co in bb[bb_len].get_print_info().split(") - (")[1][:-2].split(", ")]
-    world_min_x = min(world_min_x, -maxCoors[0])
-    world_min_y = min(world_min_y, minCoors[2])
-    world_min_z = min(world_min_z, minCoors[1])
-    world_max_x = max(world_max_x, -minCoors[0])
-    world_max_y = max(world_max_y, maxCoors[2])
-    world_max_z = max(world_max_z, maxCoors[1])
-
-object_name = "Object{}".format(num_humans+1)
-with open('/local/home/yeltao/thesis_ws/sb_min_time_quadrotor_planning/python/obstacles.txt', 'a', newline='') as file:
-        file.write(" ".join(str(x) for x in [world_min_x, world_min_y, world_min_z, world_max_x, world_max_y, world_max_z])+ '\n')

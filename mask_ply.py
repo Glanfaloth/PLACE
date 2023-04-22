@@ -14,12 +14,13 @@ directory = "scene_meshes/{}".format(args.scene)
 if not os.path.exists(directory):
     os.mkdir(directory)
 
-pcd = o3d.io.read_point_cloud('/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe/scenes/'+args.scene+'.ply')
+# pcd = o3d.io.read_point_cloud('/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe/scenes/'+args.scene+'.ply')
+pcd = o3d.io.read_point_cloud('/local/home/yeltao/Desktop/3DHuman_gen/dataset/replica_v1/'+args.scene+'/untitled.ply')
 pcd_in_np = np.asarray(pcd.points)
 
 num_files = 0
 
-for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
+for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/thesis_ws/mask3d_results'):
     for dirname in dirnames:
         if re.match(directory_pattern, dirname):
             directory_path = os.path.join(dirpath, dirname, "pred_mask")
@@ -28,7 +29,7 @@ for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
 
 def processMask(i):
     mask = []
-    for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/Downloads'):
+    for dirpath, dirnames, filenames in os.walk('/local/home/yeltao/thesis_ws/mask3d_results'):
         filename_pattern = r".*_{}\.txt$".format(i)
         for dirname in dirnames:
             if re.match(directory_pattern, dirname):

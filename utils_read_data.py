@@ -55,7 +55,13 @@ def read_mesh_sdf(dataset_path, dataset, scene_name):
 
 
     elif dataset == 'replica':
-        scene = o3d.io.read_triangle_mesh(os.path.join(os.path.join(dataset_path, scene_name), 'mesh.ply'))
+        scene = o3d.io.read_triangle_mesh(os.path.join(os.path.join(dataset_path, scene_name), 'untitled.ply'))
+        # # Create an array of random vertex colors
+        # n_vertices = len(scene.vertices)
+        # vertex_colors = np.random.uniform(size=(n_vertices, 3))
+
+        # # Assign the vertex colors to the mesh
+        # scene.vertex_colors = o3d.utility.Vector3dVector(vertex_colors)
         cur_scene_verts = np.asarray(scene.vertices)
 
         ## read scene sdf

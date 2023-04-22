@@ -24,6 +24,7 @@ parser.add_argument('--scene', type=str, default='N3OpenArea', help='scene name'
 args = parser.parse_args()
 
 prox_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/proxe'
+replica_dataset_path = '/local/home/yeltao/Desktop/3DHuman_gen/dataset/replica_v1'
 scene_name = args.scene
 directory_path = "human_meshes/{}".format(scene_name)
 
@@ -55,8 +56,11 @@ scene_verts_AE_path = 'checkpoints/sceneBpsVertsAE_last_model.pkl'
 bodyDec_path = 'checkpoints/body_dec_last_model.pkl'
 
 # read scen mesh/sdf
-scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(prox_dataset_path,
-                                                                                             'prox',
+# scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(prox_dataset_path,
+#                                                                                              'prox',
+#                                                                                              scene_name)
+scene_mesh, cur_scene_verts, s_grid_min_batch, s_grid_max_batch, s_sdf_batch = read_mesh_sdf(replica_dataset_path,
+                                                                                             'replica',
                                                                                              scene_name)
 smplx_model = smplx.create(smplx_model_path, model_type='smplx',
                            gender='neutral', ext='npz',
@@ -79,7 +83,8 @@ vposer_model, _ = load_vposer(vposer_model_path, vp_model='snapshot')
 vposer_model = vposer_model.to(device)
 print('[INFO] vposer model loaded')
 
-rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('prox', scene_name)
+# rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('prox', scene_name)
+rot_angle_1, scene_min_x, scene_max_x, scene_min_y, scene_max_y = define_scene_boundary('replica', scene_name)
 
 # rotate around z axis before cropping scene cube
 scene_verts = rotate_scene_smplx_predefine(cur_scene_verts, rot_angle=rot_angle_1)
@@ -316,30 +321,6 @@ body_mesh_opt_s2 = o3d.geometry.TriangleMesh()
 body_mesh_opt_s2.vertices = o3d.utility.Vector3dVector(body_verts_opt_prox_s2)
 body_mesh_opt_s2.triangles = o3d.utility.Vector3iVector(smplx_model.faces)
 body_mesh_opt_s2.compute_vertex_normals()
-
-# draw box
-mesh_box_1 = o3d.geometry.TriangleMesh.create_box(width=abs(scene_min_x)+abs(scene_max_x), height=0.1, depth=2.5)
-mesh_box_2 = o3d.geometry.TriangleMesh.create_box(width=abs(scene_min_x)+abs(scene_max_x), height=0.1, depth=2.5)
-mesh_box_3 = o3d.geometry.TriangleMesh.create_box(width=0.1, height=abs(scene_min_y)+abs(scene_max_y), depth=2.5)
-mesh_box_4 = o3d.geometry.TriangleMesh.create_box(width=0.1, height=abs(scene_min_y)+abs(scene_max_y), depth=2.5)
-mesh_box_1.paint_uniform_color([0.9, 0.1, 0.1]) # red
-mesh_box_2.paint_uniform_color([0.1, 0.9, 0.1]) # green
-mesh_box_3.paint_uniform_color([0.1, 0.1, 0.9]) # blue
-mesh_box_4.paint_uniform_color([0.9, 0.9, 0.1]) # yellow
-
-scene_center = scene_mesh.get_center()
-box_center_1 = mesh_box_1.get_center()
-box_center_2 = mesh_box_3.get_center()
-mesh_box_1.translate((scene_center[0] - box_center_1[0], box_center_1[1] + scene_min_y, -1))
-mesh_box_2.translate((scene_center[0] - box_center_1[0], box_center_1[1] + scene_max_y, -1))
-mesh_box_3.translate((-box_center_2[0] + scene_max_x, scene_center[1] - box_center_2[1], -1))
-mesh_box_4.translate((-box_center_2[0] + scene_min_x, scene_center[1] - box_center_2[1], -1))
-
-R = scene_mesh.get_rotation_matrix_from_xyz((0, 0, -rot_angle_1))
-mesh_box_1.rotate(R, center=(0,0,0))
-mesh_box_2.rotate(R, center=(0,0,0))
-mesh_box_3.rotate(R, center=(0,0,0))
-mesh_box_4.rotate(R, center=(0,0,0))
 
 # use normal open3d visualization
 o3d.visualization.draw_geometries([scene_mesh, body_mesh_opt_s2])
